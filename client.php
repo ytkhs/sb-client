@@ -1,6 +1,8 @@
 <?php
 
 require_once 'vendor/autoload.php';
+use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 
 class SBClient
 {
@@ -24,41 +26,39 @@ class SBClient
 
     public static function getDevices()
     {
-        return self::makeRequest('/devices');
+        return self::makeRequest('devices');
     }
 
     public static function getDeviceStatus($deviceId)
     {
-        $path = sprintf('/devices/%s/status', $deviceId);
+        $path = sprintf('devices/%s/status', $deviceId);
         return self::makeRequest($path);
     }
 
     private static function makeRequest($path = '/', $method = 'GET')
     {
-        $response = file_get_contents($_ENV['SWITCHBOT_ENDPOINT'] . $path, false, self::createContext($method));
-        return json_decode($response, true);
+        $client = new GuzzleHttp\Client(['base_uri' => $_ENV['SWITCHBOT_ENDPOINT']]);
+        $response = $client->request($method, $path, [
+            RequestOptions::HEADERS => self::makeHeaders()
+        ]);
+
+        return json_decode($response->getBody(), true);
     }
 
-    private static function createContext($method, array $data = [])
+    private static function makeHeaders()
     {
         $token = $_ENV['SWITCHBOT_TOKEN'];
         $secret = $_ENV['SWITCHBOT_SECRET'];
         $nonce = self::guidv4();
         $timestamp = time() * 1000;
 
-        return stream_context_create([
-            'http' => [
-                'method' => $method,
-                'header' =>  [
-                    'Content-Type: application/json',
-                    'Authorization: ' . $token,
-                    'sign: ' . strtoupper(base64_encode(hash_hmac('sha256', mb_convert_encoding($token . $timestamp . $nonce, 'UTF-8'), $secret, true))),
-                    'nonce: ' . $nonce,
-                    't: ' . $timestamp
-                ],
-                'content' => json_encode($data)
-            ]
-        ]);
+        return [
+            'Content-Type' => 'application/json',
+            'Authorization' =>  $token,
+            'sign' => strtoupper(base64_encode(hash_hmac('sha256', mb_convert_encoding($token . $timestamp . $nonce, 'UTF-8'), $secret, true))),
+            'nonce' => $nonce,
+            't' => $timestamp
+        ];
     }
 
     private static function guidv4($data = null)

@@ -1,6 +1,7 @@
 {
     "require": {
         "vlucas/phpdotenv": "^5.5",
-        "symfony/var-dumper": "^6.3"
+        "symfony/var-dumper": "^6.3",
+        "guzzlehttp/guzzle": "^7.7"
     }
 }
