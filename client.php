@@ -30,14 +30,27 @@ class SBClient
     public static function getDeviceStatus($deviceId)
     {
         $path = sprintf('devices/%s/status', $deviceId);
-        return self::send($path);
+        return self::send($path, 'GET');
     }
 
-    private static function send($path = '/', $method = 'GET')
+    public static function togglePlug($deviceId)
+    {
+        $state = self::getDeviceStatus($deviceId)['body']['power'];
+
+        $path = sprintf('devices/%s/commands', $deviceId);
+        return self::send($path, 'POST', [
+            'command' => ($state === 'on') ? 'turnOff' : 'turnOn',
+            'parameter' => 'default',
+            'commandType' => 'command'
+        ]);
+    }
+
+    private static function send($path = '/', $method = 'GET', array $data = [])
     {
         $client = new GuzzleHttp\Client(['base_uri' => $_ENV['SWITCHBOT_ENDPOINT']]);
         $response = $client->request($method, $path, [
-            GuzzleHttp\RequestOptions::HEADERS => self::makeHeaders()
+            GuzzleHttp\RequestOptions::HEADERS => self::makeHeaders(),
+            GuzzleHttp\RequestOptions::JSON => $data
         ]);
 
         return json_decode($response->getBody(), true);
