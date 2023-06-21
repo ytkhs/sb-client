@@ -1,8 +1,6 @@
 <?php
 
 require_once 'vendor/autoload.php';
-use GuzzleHttp\Client;
-use GuzzleHttp\RequestOptions;
 
 class SBClient
 {
@@ -26,20 +24,20 @@ class SBClient
 
     public static function getDevices()
     {
-        return self::makeRequest('devices');
+        return self::send('devices');
     }
 
     public static function getDeviceStatus($deviceId)
     {
         $path = sprintf('devices/%s/status', $deviceId);
-        return self::makeRequest($path);
+        return self::send($path);
     }
 
-    private static function makeRequest($path = '/', $method = 'GET')
+    private static function send($path = '/', $method = 'GET')
     {
         $client = new GuzzleHttp\Client(['base_uri' => $_ENV['SWITCHBOT_ENDPOINT']]);
         $response = $client->request($method, $path, [
-            RequestOptions::HEADERS => self::makeHeaders()
+            GuzzleHttp\RequestOptions::HEADERS => self::makeHeaders()
         ]);
 
         return json_decode($response->getBody(), true);
