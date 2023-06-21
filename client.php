@@ -35,11 +35,11 @@ class SBClient
 
     public static function togglePlug($deviceId)
     {
-        $state = self::getDeviceStatus($deviceId)['body']['power'];
+        $power = self::getDeviceStatus($deviceId)['body']['power'];
 
         $path = sprintf('devices/%s/commands', $deviceId);
         return self::send($path, 'POST', [
-            'command' => ($state === 'on') ? 'turnOff' : 'turnOn',
+            'command' => ($power === 'on') ? 'turnOff' : 'turnOn',
             'parameter' => 'default',
             'commandType' => 'command'
         ]);
